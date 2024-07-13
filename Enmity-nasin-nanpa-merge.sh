@@ -10,8 +10,11 @@ if [[ -v missing ]]; then
         echo "Aborting."; exit 1;
 fi
 
+enmityLink="https://github.com/enmity-mod/tweak/releases/latest/download/Enmity.ipa"
+#enmityLink="https://github.com/Hargers/tweak/releases/latest/download/Enmity.ipa" #I might build a newer release than the official repo if it's fallen behind a good bit. Uncomment this if you'd like to use it.
+
 wget -O nasin-nanpa.otf $(wget -q -O - https://api.github.com/repos/ETBCOR/nasin-nanpa/releases/latest | awk '/browser_download_url/ && $0 !~ /Helvetica/ && $0 !~ /UCSUR/ {print $2}' | sed 's/\"//g') -q --show-progress || { echo >&2 "Failed to download font nasin-nanpa"; exit 1; }
-wget https://github.com/enmity-mod/tweak/releases/latest/download/Enmity.ipa -q --show-progress || { echo >&2 "Failed to download Enmity"; exit 1; }
+wget $enmityLink -q --show-progress || { echo >&2 "Failed to download Enmity"; exit 1; }
 
 fontforge -lang=ff -c "Open(\"nasin-nanpa.otf\"); RemoveLookup(\"'liga' Standard Ligatures in Latin lookup 0\"); RemoveLookup(\"'liga' Standard Ligatures in Latin lookup 1\"); RemoveLookup(\"'liga' Standard Ligatures in Latin lookup 3\"); Generate(\"nasin-nanpa.otf\")"
 
