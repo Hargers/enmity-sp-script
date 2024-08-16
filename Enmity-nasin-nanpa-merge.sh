@@ -16,7 +16,22 @@ enmityLink="https://github.com/enmity-mod/tweak/releases/latest/download/Enmity.
 wget -O nasin-nanpa.otf $(wget -q -O - https://api.github.com/repos/ETBCOR/nasin-nanpa/releases/latest | awk '/browser_download_url/ && $0 !~ /Helvetica/ && $0 !~ /UCSUR/ {print $2}' | sed 's/\"//g') -q --show-progress || { echo >&2 "Failed to download font nasin-nanpa"; exit 1; }
 wget $enmityLink -q --show-progress || { echo >&2 "Failed to download Enmity"; exit 1; }
 
-fontforge -lang=ff -c "Open(\"nasin-nanpa.otf\"); RemoveLookup(\"'liga' Standard Ligatures in Latin lookup 0\"); RemoveLookup(\"'liga' Standard Ligatures in Latin lookup 1\"); RemoveLookup(\"'liga' Standard Ligatures in Latin lookup 3\"); Generate(\"nasin-nanpa.otf\")"
+if [ -f ligatures.psv ] && rows=$(awk 'END { print NR }' ligatures.psv) && [ $rows -gt 0 ]; then
+	echo "Saving ligatures"
+	ligatureScript+="AddLookup(\"'liga' Standard Ligatures in Latin lookup 15\",\"GSUB_ligature\",0,[[\"liga\",[[\"dflt\",[\"dflt\",\"latn\"]],[\"latn\",[\"dflt\"]]]]],\"'rand' Randomize in Latin lookup 2\");"
+	ligatureScript+="AddLookupSubtable(\"'liga' Standard Ligatures in Latin lookup 15\",\"'liga' Standard Ligatures in Latin lookup 15 subtable\");"
+	for ((row=1; row<=rows; row++)); do
+		fromLookup=$(awk -v row="$row" -v column="1" -F '|' 'NR==row {print $column}' ligatures.psv)
+		if [[ $fromLookup == \#* ]]; then continue; fi
+		glyph=$(awk -v row="$row" -v column="2" -F '|' 'NR==row {print $column}' ligatures.psv)
+		sourceGlyphs=$(awk -v row="$row" -v column="3" -F '|' 'NR==row {print $column}' ligatures.psv)
+		ligatureScript+="Select(\"$glyph\");"
+		ligatureScript+="RemovePosSub(\"$fromLookup\");"
+		ligatureScript+="AddPosSub(\"'liga' Standard Ligatures in Latin lookup 15 subtable\", \"$sourceGlyphs\");"
+	done
+else echo "No saved ligatures"; fi
+
+fontforge -lang=ff -c "Open(\"nasin-nanpa.otf\"); $ligatureScript RemoveLookup(\"'liga' Standard Ligatures in Latin lookup 0\"); RemoveLookup(\"'liga' Standard Ligatures in Latin lookup 1\"); RemoveLookup(\"'liga' Standard Ligatures in Latin lookup 3\"); Generate(\"nasin-nanpa.otf\")"
 
 unzip Enmity.ipa
 
