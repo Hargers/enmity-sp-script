@@ -43,7 +43,7 @@ for font in Payload/Discord.app/*.ttf; do
 	rm $font
 done
 
-sed -i -e 's/ttf/otf/g' Payload/Discord.app/Info.plist
+sed -i -e 's/ttf/otf/g' -e '/UISupportedDevices/,/DTAppStoreToolsBuild/{/UISupportedDevices/d;/DTAppStoreToolsBuild/!d;}' Payload/Discord.app/Info.plist
 
 zip -r Enmity-SP.ipa Payload/
 echo "File output to Enmity-SP.ipa"
